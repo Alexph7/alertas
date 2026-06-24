@@ -158,6 +158,6 @@ setInterval(async () => {
         console.error(err);
     }
 
-},10000);
+}, 4 * 60 * 1000);
 
 console.log("Bot iniciado.");
