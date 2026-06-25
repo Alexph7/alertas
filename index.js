@@ -63,12 +63,13 @@ bot.on("message", async (msg) => {
 
         if (/^\/cancelar\b/i.test(texto)) {
 
-            const qtd =
+            const fluxo =
                 fluxoAdd.get(userId);
 
-            if (qtd) {
+            const qtd =
+                fluxo?.qtd || 0;
 
-                pendentes += qtd;
+            if (qtd) {
 
                 fluxoAdd.delete(userId);
 
@@ -86,31 +87,66 @@ bot.on("message", async (msg) => {
 
         if (/^\/add\b/i.test(texto)) {
 
-            if (!REGEX_LINK.test(texto))
+            if (fluxoAdd.has(userId)) {
                 return;
+            }
+
+            fluxoAdd.set(userId, {
+                qtd: 0,
+                ids: new Set()
+            });
+
+            return;
+        }
+
+        if (fluxoAdd.has(userId)) {
 
             const ids =
                 texto.match(REGEX_ID) || [];
 
-            const qtd = ids.length;
+            if (ids.length > 0) {
 
-            if (!qtd)
-                return;
+                const fluxo =
+                    fluxoAdd.get(userId);
 
-            pendentes =
-                Math.max(
-                    0,
-                    pendentes - qtd
+                for (const id of ids) {
+
+                    if (fluxo.ids.has(id))
+                        continue;
+
+                    fluxo.ids.add(id);
+                    fluxo.qtd++;
+                }
+
+                console.log(
+                    `[ADD IDS] user=${userId} qtd=${fluxo.qtd}`
                 );
 
-            fluxoAdd.set(
-                userId,
-                qtd
-            );
+                return;
+            }
 
-            console.log(
-                `[ADD] user=${userId} qtd=${qtd} pendentes=${pendentes}`
-            );
+            if (REGEX_LINK.test(texto)) {
+
+                const fluxo =
+                    fluxoAdd.get(userId);
+
+                const qtd =
+                    fluxo?.qtd || 0;
+
+                pendentes =
+                    Math.max(
+                        0,
+                        pendentes - qtd
+                    );
+
+                fluxoAdd.delete(userId);
+
+                console.log(
+                    `[ADD CONCLUIDO] user=${userId} qtd=${qtd} pendentes=${pendentes}`
+                );
+
+                return;
+            }
 
             return;
         }
